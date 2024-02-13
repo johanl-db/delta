@@ -610,10 +610,36 @@ trait DeltaErrorsBase
     )
   }
 
-  def alterTableChangeColumnException(oldColumns: String, newColumns: String): Throwable = {
-    new AnalysisException(
-      "ALTER TABLE CHANGE COLUMN is not supported for changing column " + oldColumns + " to "
-      + newColumns)
+  def addCommentToMapArrayException(fieldPath: String): Throwable = {
+    new DeltaAnalysisException(
+      errorClass = "DELTA_UNSUPPORTED_COMMENT_MAP_ARRAY",
+      messageParameters = Array(fieldPath)
+    )
+  }
+
+  def alterTableChangeColumnException(
+      fieldPath: String,
+      oldField: StructField,
+      newField: StructField): Throwable = {
+    new DeltaAnalysisException(
+      errorClass = "DELTA_UNSUPPORTED_ALTER_TABLE_CHANGE_COL_OP",
+      messageParameters = Array(
+        fieldPath,
+        oldField.dataType.typeName,
+        oldField.nullable.toString,
+        newField.dataType.typeName,
+        newField.nullable.toString)
+    )
+  }
+
+  def alterTableReplaceColumnsException(
+      oldSchema: StructType,
+      newSchema: StructType,
+      reason: String): Throwable = {
+    new DeltaAnalysisException(
+      errorClass = "DELTA_UNSUPPORTED_ALTER_TABLE_REPLACE_COL_OP",
+      messageParameters = Array(reason, formatSchema(oldSchema), formatSchema(newSchema))
+    )
   }
 
   def cannotWriteIntoView(table: TableIdentifier): Throwable = {
@@ -685,16 +711,6 @@ trait DeltaErrorsBase
     new DeltaAnalysisException(
       errorClass = "DELTA_COLUMN_STRUCT_TYPE_MISMATCH",
       messageParameters = Array(source, targetType, target, tableName))
-  }
-
-  def alterTableReplaceColumnsException(
-      oldSchema: StructType,
-      newSchema: StructType,
-      reason: String): Throwable = {
-    new DeltaAnalysisException(
-      errorClass = "DELTA_UNSUPPORTED_ALTER_TABLE_REPLACE_COL_OP",
-      messageParameters = Array(reason, formatSchema(oldSchema), formatSchema(newSchema))
-    )
   }
 
   def ambiguousPartitionColumnException(
